@@ -2,6 +2,7 @@ import { Router } from 'express';
 const router = Router();
 import { ApiError } from '../errors/errors';
 import FriendFacade from '../facades/friendFacade';
+import base64 from 'base-64';
 const debug = require('debug')('friend-routes');
 
 let facade: FriendFacade;
@@ -32,6 +33,16 @@ router.post('/', async function (req, res, next) {
   }
 });
 
+router.post('/login', async (req, res, next) => {
+  const { userName, password } = req.body;
+  const user = await facade.getVerifiedUser(userName, password);
+  if (!user) {
+    return next(new ApiError('Failded to login', 400));
+  }
+  const base64AuthString = 'Basic ' + base64.encode(userName + ':' + password);
+  res.json({ base64AuthString, user: user.email, role: user.role });
+});
+
 // ALL ENDPOINTS BELOW REQUIRES AUTHENTICATION
 
 import authMiddleware from '../middleware/basic-auth';
@@ -40,16 +51,6 @@ const USE_AUTHENTICATION = !process.env['SKIP_AUTHENTICATION'];
 if (USE_AUTHENTICATION) {
   router.use(authMiddleware);
 }
-
-router.get('/all', async (req: any, res) => {
-  const friends = await facade.getAllFriends();
-
-  const friendsDTO = friends.map((friend) => {
-    const { firstName, lastName, email } = friend;
-    return { firstName, lastName, email };
-  });
-  res.json(friendsDTO);
-});
 
 /**
  * authenticated users can edit himself
@@ -99,13 +100,34 @@ router.get('/me', async (req: any, res, next) => {
 
 //These endpoint requires admin rights
 
+//An admin user can fetch all users
+router.get('/all', async (req: any, res, next) => {
+  try {
+    if (
+      (USE_AUTHENTICATION && req.credentials.role !== 'admin') ||
+      !req.credentials.role
+    ) {
+      throw new ApiError('Not Authorized', 401);
+    }
+
+    const friends = await facade.getAllFriends();
+
+    const friendsDTO = friends.map((friend) => {
+      const { firstName, lastName, email } = friend;
+      return { firstName, lastName, email };
+    });
+    res.json(friendsDTO);
+  } catch (err) {
+    next(err);
+  }
+});
+
 //An admin user can fetch everyone
 router.get('/find-user/:email', async (req: any, res, next) => {
   try {
     if (
-      USE_AUTHENTICATION &&
-      !req.credentials.role &&
-      req.credentials.role !== 'admin'
+      (USE_AUTHENTICATION && req.credentials.role !== 'admin') ||
+      !req.credentials.role
     ) {
       throw new ApiError('Not Authorized', 401);
     }
@@ -127,9 +149,8 @@ router.get('/find-user/:email', async (req: any, res, next) => {
 router.put('/:email', async function (req: any, res, next) {
   try {
     if (
-      USE_AUTHENTICATION &&
-      !req.credentials.role &&
-      req.credentials.role !== 'admin'
+      (USE_AUTHENTICATION && req.credentials.role !== 'admin') ||
+      !req.credentials.role
     ) {
       throw new ApiError('Not Authorized', 401);
     }
@@ -153,9 +174,8 @@ router.put('/:email', async function (req: any, res, next) {
 router.delete('/:email', async function (req: any, res, next) {
   try {
     if (
-      USE_AUTHENTICATION &&
-      !req.credentials.role &&
-      req.credentials.role !== 'admin'
+      (USE_AUTHENTICATION && req.credentials.role !== 'admin') ||
+      !req.credentials.role
     ) {
       throw new ApiError('Not Authorized', 401);
     }

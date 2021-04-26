@@ -19,7 +19,8 @@ const authMiddleware = async function (
   } else {
     res.statusCode = 401;
     res.setHeader('WWW-Authenticate', 'Basic realm="example"');
-    res.end('Access denied');
+    //res.end('Access denied')
+    res.json({ errors: [{ message: 'Access denied' }] });
   }
 };
 

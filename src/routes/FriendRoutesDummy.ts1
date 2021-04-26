@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ApiError } from '../errors/errors';
-import facade from '../facades/DummyDB-Facade';
+import facade from '../facades/DummyDB-Facade.ts1';
 import { IFriend } from '../interfaces/IFriend';
 const router = Router();
 
@@ -50,7 +50,7 @@ router.get('/findby-email/:email', async (req, res, next) => {
 router.post('/friends', async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   const newFriend: IFriend = {
-    id: '',
+    _id: '',
     firstName,
     lastName,
     email,
