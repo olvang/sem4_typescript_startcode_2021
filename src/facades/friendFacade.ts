@@ -62,11 +62,21 @@ class FriendsFacade {
 
   /* This version returns the updated Friend
      IMPORTANT --> Observe INPUT VALIDATION is different compared to when adding a new Friend */
-  async editFriendV2(email: string, friend: IFriend): Promise<IFriend> {
-    const status = USER_INPUT_EDIT_SCHEMA.validate(friend);
+  async editFriendV2(
+    email: string,
+    friend: IFriend,
+    admin: Boolean
+  ): Promise<IFriend> {
+    let status;
+    if (admin) {
+      status = USER_INPUT_ADMIN_SCHEMA.validate(friend);
+    } else {
+      status = USER_INPUT_SCHEMA.validate(friend);
+    }
     if (status.error) {
       throw new ApiError(status.error.message, 400);
     }
+
     let f = { ...friend };
     if (friend.password) {
       const hashedpw = await bcrypt.hash(friend.password, BCRYPT_ROUNDS);
@@ -202,7 +212,6 @@ class FriendsFacade {
 
       return { modifiedCount: updated.modifiedCount };
     } catch (error) {
-      console.log(error);
       logger.error(error);
       throw new ApiError('Error while updating user', 500);
     }

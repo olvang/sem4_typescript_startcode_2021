@@ -31,6 +31,16 @@ export const resolvers = {
       }
       return friendFacade.getAllFriendsV2();
     },
+    getFriendByEmail: (root: any, _: any, context: any) => {
+      if (
+        !context.credentials ||
+        !context.credentials.role ||
+        context.credentials.role !== 'admin'
+      ) {
+        throw new ApiError('Not Authorized', 401);
+      }
+      return friendFacade.getFriendFromEmail(_.email);
+    },
 
     getAllFriendsProxy: async (root: object, _: any, context: Request) => {
       let options: any = { method: 'GET' };
@@ -57,9 +67,14 @@ export const resolvers = {
     },
     editFriend: async (
       _: object,
-      { email, input }: { email: string; input: IFriend }
+      { email, input }: { email: string; input: IFriend },
+      context: any
     ) => {
-      return friendFacade.editFriendV2(email, input);
+      return friendFacade.editFriendV2(
+        email,
+        input,
+        context.credentials.role === 'admin'
+      );
     },
   },
 };

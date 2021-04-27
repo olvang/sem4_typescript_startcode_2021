@@ -17,9 +17,15 @@ const typeDefs = `
      type Query {
         """
         Returns all details for all Friends
-        (Should probably require 'admin' rights if your are using authentication)
+        (Requires 'admin' rights)
         """
         getAllFriends : [Friend]!
+
+         """
+        Find and returns a friend searching on email
+        (Requires 'admin' rights)
+        """
+        getFriendByEmail(email: String) : Friend!
 
         """
         Only required if you ALSO wan't to try a version where the result is fetched from the existing endpoint
@@ -39,7 +45,8 @@ const typeDefs = `
         firstName: String
         lastName: String
         password: String
-        email: String!
+        email: String
+        role: String
     }
 
     type Mutation {

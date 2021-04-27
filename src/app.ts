@@ -17,12 +17,12 @@ app.set('logger', logger);
 
 const morganFormat = process.env.NODE_ENV == 'production' ? 'combined' : 'dev';
 app.use(require('morgan')(morganFormat, { stream }));
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-app.use('/api/friends', cors(), friendRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.get('/demo', (req, res) => {
   res.send('Server is up');
@@ -38,15 +38,12 @@ app.get('/whattodo', async (req, res) => {
 app.use('/graphql', (req, res, next) => {
   const body = req.body;
   if (body && body.query && body.query.includes('createFriend')) {
-    console.log('Create');
     return next();
   }
   if (body && body.operationName && body.query.includes('IntrospectionQuery')) {
-    console.log('IntrospectionQuery');
     return next();
   }
   if (body.query && (body.mutation || body.query)) {
-    console.log('something else');
     return authMiddleware(req, res, next);
   }
   next();

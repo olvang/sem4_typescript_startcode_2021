@@ -37,7 +37,7 @@ router.post('/login', async (req, res, next) => {
   const { userName, password } = req.body;
   const user = await facade.getVerifiedUser(userName, password);
   if (!user) {
-    return next(new ApiError('Failded to login', 400));
+    return next(new ApiError('Failed to login', 400));
   }
   const base64AuthString = 'Basic ' + base64.encode(userName + ':' + password);
   res.json({ base64AuthString, user: user.email, role: user.role });
